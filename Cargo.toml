@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "humansort-cli",
+    "humansort-web",
+]
