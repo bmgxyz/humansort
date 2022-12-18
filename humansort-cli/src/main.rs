@@ -5,6 +5,7 @@ use std::{
 };
 
 use clap::{Parser, Subcommand};
+use console::Term;
 use humansort_lib::HumansortState;
 
 #[derive(Parser)]
@@ -33,7 +34,7 @@ enum Commands {
         hs_file: PathBuf,
         /// Number of items to prompt the user to sort in a single iteration
         #[arg(value_name = "NUM_ITEMS")]
-        num_items: Option<u8>,
+        num_items: Option<usize>,
     },
     /// Reads a humansort file and outputs a sorted list
     Output {
@@ -76,15 +77,61 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Commands::Sort { hs_file, num_items } => {
             // Read and parse humansort file.
+            let infile = read_to_string(hs_file.clone())?;
+            let mut humansort = serde_json::from_str::<HumansortState>(&infile)?;
 
-            // Prompt the user for sorting information.
-            todo!()
+            let num_choices = if let Some(n) = num_items { n } else { 2 };
+
+            let term = Term::stdout();
+            for _ in 0..num_choices {
+                term.write_line("")?;
+            }
+
+            loop {
+                // Clear lines.
+                term.clear_last_lines(num_choices)?;
+
+                // Check for stopping criterion and notify the user as
+                // appropriate.
+                // TODO
+
+                // Get options and print them.
+                let items = humansort.next();
+                for (idx, item) in items.iter().enumerate() {
+                    term.write_line(&format!("({}) {}", idx + 1, *item))?;
+                }
+
+                // Get user's choice.
+                let mut choice = ' ';
+                while !choice.is_ascii_digit() {
+                    choice = term.read_char()?;
+                }
+                let choice_idx = (choice.to_digit(10).unwrap() - 1) as usize;
+
+                // Update sort state.
+                let mut new_data = vec![items[choice_idx].clone()];
+                for (idx, item) in items.iter().enumerate() {
+                    if idx == choice_idx {
+                        continue;
+                    }
+                    new_data.push(item.clone());
+                }
+                humansort.update(&new_data);
+
+                // Write the new state to the input file.
+                let output = serde_json::to_string_pretty(&humansort)?;
+                write(hs_file.clone(), output)?;
+            }
         }
         Commands::Output { hs_file } => {
             // Read and parse humansort file.
+            let infile = read_to_string(hs_file)?;
+            let humansort = serde_json::from_str::<HumansortState>(&infile)?;
 
             // Print all items in descending order by rating.
-            todo!()
+            for item in humansort {
+                println!("{}", item);
+            }
         }
     };
 
