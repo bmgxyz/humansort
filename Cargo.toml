@@ -1,6 +1,3 @@
 [workspace]
 
-members = [
-    "humansort-cli",
-    "humansort-web",
-]
+members = ["humansort-cli", "humansort-lib", "humansort-web"]

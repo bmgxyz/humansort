@@ -1,9 +1,6 @@
 [package]
-name = "humansort-cli"
+name = "humansort-lib"
 authors = ["Bradley Gannon <bradley@bradleygannon.com>"]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-
-[dependencies]
-clap = { version = "4.0.29", features = ["derive"] }
