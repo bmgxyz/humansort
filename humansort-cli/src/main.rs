@@ -18,7 +18,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Reads a line-delimited list of items and creates a humansort file
-    Start {
+    New {
         /// File containing a line-delimited list of items to be sorted
         #[arg(value_name = "INFILE")]
         input_file: PathBuf,
@@ -26,6 +26,14 @@ enum Commands {
         /// <INFILE>.humansort)
         #[arg(value_name = "OUTFILE")]
         hs_file: Option<PathBuf>,
+    },
+    Merge {
+        /// File containing a line-delimited list of items to be sorted
+        #[arg(value_name = "INFILE")]
+        input_file: PathBuf,
+        /// Name of the humansort file to be updated
+        #[arg(value_name = "OUTFILE")]
+        hs_file: PathBuf,
     },
     /// Read a humansort file and interactively sort it
     Sort {
@@ -48,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Start {
+        Commands::New {
             input_file,
             hs_file,
         } => {
@@ -74,6 +82,28 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             };
             write(output_file, output)?;
+        }
+        Commands::Merge {
+            input_file,
+            hs_file,
+        } => {
+            // Read input file.
+            let new_items: Vec<String> = read_to_string(input_file.clone())?
+                .lines()
+                .map(|s| s.to_string())
+                .collect();
+
+            // Read and parse humansort file.
+            let outfile = read_to_string(hs_file.clone())?;
+            let mut humansort = serde_json::from_str::<HumansortState>(&outfile)?;
+
+            // Update the humansort state by deleting missing items and adding
+            // new ones.
+            humansort.merge(&new_items);
+
+            // Write updated state to the original file.
+            let output = serde_json::to_string_pretty(&humansort)?;
+            write(hs_file, output)?;
         }
         Commands::Sort { hs_file, num_items } => {
             // Read and parse humansort file.

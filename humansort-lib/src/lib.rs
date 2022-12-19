@@ -83,6 +83,29 @@ impl HumansortState {
         self.items
             .sort_by(|a, b| b.rating.partial_cmp(&a.rating).unwrap());
     }
+    pub fn merge(&mut self, items_to_merge: &[String]) {
+        let mut new_items = Vec::new();
+        // Keep items that are in the new list. (This implicitly removes items
+        // that are in the old list by not the new list.)
+        for item in self.items.iter() {
+            if items_to_merge.contains(&item.value) {
+                new_items.push(item.clone());
+            }
+        }
+        // Add items that are in the new list but not already in the old list.
+        for item in items_to_merge {
+            if self.items.iter().find(|i| i.value == *item).is_none() {
+                new_items.push(HumansortItem {
+                    value: item.clone(),
+                    rating: 0.,
+                });
+            }
+        }
+        self.items = new_items;
+        // Sort descending by rating.
+        self.items
+            .sort_by(|a, b| b.rating.partial_cmp(&a.rating).unwrap());
+    }
 }
 
 impl From<Vec<String>> for HumansortState {
