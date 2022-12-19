@@ -6,4 +6,5 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
+rand = "0.8.5"
 serde = { version = "1.0.151", features = ["derive"] }

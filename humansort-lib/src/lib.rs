@@ -1,5 +1,6 @@
 use std::{collections::HashSet, fmt::Display};
 
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -11,23 +12,27 @@ pub struct HumansortState {
 
 impl HumansortState {
     pub fn next(&self) -> Vec<String> {
-        // Find the window of items that are closest together by their ratings.
-        let mut smallest_range = f32::MAX;
-        let mut smallest_range_start = 0;
-        for idx in 0..self.items.len() - self.num_items {
-            let range = (self.items[idx].rating - self.items[idx + self.num_items].rating).abs();
-            if range < smallest_range {
-                smallest_range = range;
-                smallest_range_start = idx;
+        // Select the desired number of items with a preference for higher-rated
+        // items. (This avoids prompting the user for more information on items
+        // that they rated lower already.)
+        let mut rng = rand::thread_rng();
+        let mut indices = Vec::new();
+        while indices.len() < self.num_items {
+            let x = rng.gen_range(0_f32..1_f32);
+            let y = if x <= 0.25 {
+                x
+            } else {
+                (x - 0.1).powi(3) + 0.25
+            };
+            let y_rounded = (y * self.items.len() as f32).round() as usize;
+            if !indices.contains(&y_rounded) {
+                indices.push(y_rounded);
             }
         }
-
-        // Return the underlying values of the chosen items.
-        let mut values = self.items[smallest_range_start..smallest_range_start + self.num_items]
-            .iter()
-            .map(|i| i.value.clone())
-            .collect::<Vec<String>>();
-        values.rotate_right(smallest_range_start % self.num_items);
+        let mut values = Vec::new();
+        for idx in indices {
+            values.push(self.items[idx].value.clone());
+        }
         values
     }
     pub fn update(&mut self, new_data: &[String]) {
