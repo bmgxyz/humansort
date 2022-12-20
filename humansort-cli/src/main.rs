@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             hs_file,
         } => {
             // Read input file.
-            let new_items: Vec<String> = read_to_string(input_file.clone())?
+            let new_items: Vec<String> = read_to_string(input_file)?
                 .lines()
                 .map(|s| s.to_string())
                 .collect();

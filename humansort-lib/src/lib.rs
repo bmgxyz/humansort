@@ -104,7 +104,7 @@ impl HumansortState {
         }
         // Add items that are in the new list but not already in the old list.
         for item in items_to_merge {
-            if self.items.iter().find(|i| i.value == *item).is_none() {
+            if !self.items.iter().any(|i| i.value == *item) {
                 new_items.push(HumansortItem {
                     value: item.clone(),
                     rating: 0.,
