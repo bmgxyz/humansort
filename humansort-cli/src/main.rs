@@ -42,7 +42,7 @@ enum Commands {
         hs_file: PathBuf,
         /// Number of items to prompt the user to sort in a single iteration
         #[arg(value_name = "NUM_ITEMS")]
-        num_items: Option<usize>,
+        maybe_num_items: Option<usize>,
     },
     /// Reads a humansort file and outputs a sorted list
     Output {
@@ -105,21 +105,29 @@ fn main() -> Result<(), Box<dyn Error>> {
             let output = serde_json::to_string_pretty(&humansort)?;
             write(hs_file, output)?;
         }
-        Commands::Sort { hs_file, num_items } => {
+        Commands::Sort {
+            hs_file,
+            maybe_num_items,
+        } => {
             // Read and parse humansort file.
             let infile = read_to_string(hs_file.clone())?;
             let mut humansort = serde_json::from_str::<HumansortState>(&infile)?;
 
-            let num_choices = if let Some(n) = num_items { n } else { 2 };
+            let num_items = if let Some(n) = maybe_num_items {
+                humansort.set_num_items(n)?;
+                n
+            } else {
+                humansort.num_items()
+            };
 
             let term = Term::stdout();
-            for _ in 0..num_choices {
+            for _ in 0..num_items {
                 term.write_line("")?;
             }
 
             loop {
                 // Clear lines.
-                term.clear_last_lines(num_choices)?;
+                term.clear_last_lines(num_items)?;
 
                 // Check for stopping criterion and notify the user as
                 // appropriate.

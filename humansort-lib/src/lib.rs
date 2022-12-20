@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::HashSet, error::Error, fmt::Display};
 
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -6,8 +6,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct HumansortState {
     items: Vec<HumansortItem>,
+    #[serde(skip, default = "default_num_items")]
     num_items: usize,
+    #[serde(skip, default = "default_current_idx")]
     current_idx: usize,
+}
+
+fn default_num_items() -> usize {
+    5
+}
+
+fn default_current_idx() -> usize {
+    0
 }
 
 impl HumansortState {
@@ -105,6 +115,20 @@ impl HumansortState {
         // Sort descending by rating.
         self.items
             .sort_by(|a, b| b.rating.partial_cmp(&a.rating).unwrap());
+    }
+    pub fn set_num_items(&mut self, new_num_items: usize) -> Result<(), Box<dyn Error>> {
+        if new_num_items < 2 {
+            return Err(format!(
+                "Number of items to display must be >= 2 (got {})",
+                new_num_items
+            )
+            .into());
+        }
+        self.num_items = new_num_items;
+        Ok(())
+    }
+    pub fn num_items(&self) -> usize {
+        self.num_items
     }
 }
 
