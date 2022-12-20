@@ -27,6 +27,8 @@ enum Commands {
         #[arg(value_name = "OUTFILE")]
         hs_file: Option<PathBuf>,
     },
+    /// Update a humansort file with new inputs; adds new items and removes
+    /// missing ones
     Merge {
         /// File containing a line-delimited list of items to be sorted
         #[arg(value_name = "INFILE")]
