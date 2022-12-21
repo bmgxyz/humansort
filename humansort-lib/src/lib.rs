@@ -45,36 +45,24 @@ impl HumansortState {
         }
         values
     }
-    pub fn update(&mut self, new_data: &[String]) {
+    pub fn update(&mut self, new_data: &[String]) -> Result<(), Box<dyn Error>> {
         // Assume that the first item is the "winner", and all others are the
         // "losers". Compute rating updates based on pairwise comparisons
         // between the first item and all the others.
         if new_data.len() < 2 {
-            return;
+            return Err(format!("Must have at least two items, found {}", new_data.len()).into());
         }
 
         let winner = &new_data[0];
         let losers = &new_data[1..];
 
         // Find the winner's rating.
-        let winner_idx = self
-            .items
-            .iter()
-            .enumerate()
-            .find(|(_, l)| l.value == *winner)
-            .unwrap()
-            .0;
+        let winner_idx = self.find_item_idx_by_value(winner)?;
         let winner_rating = self.items[winner_idx].rating;
         let mut winner_rating_increase = 0.;
         for loser in losers.iter() {
             // Find the loser's rating.
-            let loser_idx = self
-                .items
-                .iter()
-                .enumerate()
-                .find(|(_, l)| l.value == *loser)
-                .unwrap()
-                .0;
+            let loser_idx = self.find_item_idx_by_value(loser)?;
             let loser_rating = self.items[loser_idx].rating;
 
             // Compute the expected score of the winner in the match between the
@@ -92,6 +80,8 @@ impl HumansortState {
         // Sort descending by rating.
         self.items
             .sort_by(|a, b| b.rating.partial_cmp(&a.rating).unwrap());
+
+        Ok(())
     }
     pub fn merge(&mut self, items_to_merge: &[String]) {
         let mut new_items = Vec::new();
@@ -129,6 +119,18 @@ impl HumansortState {
     }
     pub fn num_items(&self) -> usize {
         self.num_items
+    }
+    fn find_item_idx_by_value(&self, needle: &String) -> Result<usize, Box<dyn Error>> {
+        let maybe_item = self
+            .items
+            .iter()
+            .enumerate()
+            .find(|(_, l)| l.value == *needle);
+        if let Some(i) = maybe_item {
+            Ok(i.0)
+        } else {
+            Err(format!("Failed to find '{}'", needle).into())
+        }
     }
 }
 

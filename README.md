@@ -10,7 +10,7 @@ names or books.
 
 `humansort` uses the [Elo rating system][elo], which Arpad Elo invented for
 chess, but which turns out to have lots of applications in competitive games. In
-a sense, `humansort` maybe viewed as a "competition" among little bits of text.
+a sense, `humansort` may be viewed as a "competition" among little bits of text.
 The winners float to the top.
 
 [elo]: https://en.wikipedia.org/wiki/Elo_rating_system

@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs::{read_to_string, write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use clap::{Parser, Subcommand};
@@ -54,6 +54,13 @@ enum Commands {
     },
 }
 
+fn read_input_file(input_file: &Path) -> Result<Vec<String>, Box<dyn Error>> {
+    Ok(read_to_string(input_file)?
+        .lines()
+        .map(|s| s.to_string())
+        .collect())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
@@ -62,11 +69,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             input_file,
             hs_file,
         } => {
-            // Read input file.
-            let infile: Vec<String> = read_to_string(input_file.clone())?
-                .lines()
-                .map(|s| s.to_string())
-                .collect();
+            let infile = read_input_file(&input_file)?;
 
             // Convert input file to humansort state.
             let humansort: HumansortState = infile.into();
@@ -90,10 +93,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             hs_file,
         } => {
             // Read input file.
-            let new_items: Vec<String> = read_to_string(input_file)?
-                .lines()
-                .map(|s| s.to_string())
-                .collect();
+            let new_items = read_input_file(&input_file)?;
 
             // Read and parse humansort file.
             let outfile = read_to_string(hs_file.clone())?;
@@ -116,8 +116,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut humansort = serde_json::from_str::<HumansortState>(&infile)?;
 
             let num_items = if let Some(n) = maybe_num_items {
-                humansort.set_num_items(n)?;
-                n
+                if (2..=9).contains(&n) {
+                    humansort.set_num_items(n)?;
+                    n
+                } else {
+                    return Err(format!(
+                        "Number of items must be between 2 and 9, inclusive (found {})",
+                        n
+                    )
+                    .into());
+                }
             } else {
                 humansort.num_items()
             };
@@ -143,9 +151,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 // Get user's choice.
                 let mut choice = ' ';
-                while !choice.is_ascii_digit() {
+                while !choice.is_ascii_digit() && choice != 'q' {
                     choice = term.read_char()?;
                 }
+                // Quit if the user said so.
+                if choice == 'q' {
+                    term.clear_last_lines(num_items)?;
+                    break;
+                }
+                // Otherwise, try to convert their choice into a number.
                 let choice_idx = (choice.to_digit(10).unwrap() - 1) as usize;
 
                 // Update sort state.
@@ -156,7 +170,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     new_data.push(item.clone());
                 }
-                humansort.update(&new_data);
+                humansort.update(&new_data)?;
 
                 // Write the new state to the input file.
                 let output = serde_json::to_string_pretty(&humansort)?;
@@ -169,8 +183,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             let humansort = serde_json::from_str::<HumansortState>(&infile)?;
 
             // Print all items in descending order by rating.
+            let term = Term::stdout();
             for item in humansort {
-                println!("{}", item);
+                // If the output of humansort is a pipe instead of stdout, then
+                // the pipe can break before we finish writing our items. (For
+                // example, this happens when piping to head.) Rather than
+                // throwing an error in that case, we just stop sending items
+                // early.
+                if term.write_line(&format!("{}", item)).is_err() {
+                    break;
+                }
             }
         }
     };
