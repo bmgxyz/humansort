@@ -34,7 +34,7 @@ impl HumansortState {
             } else {
                 (x - 0.1).powi(3) + 0.25
             };
-            let y_rounded = (y * self.items.len() as f32).round() as usize;
+            let y_rounded = (y * self.items.len() as f32).floor() as usize;
             if !indices.contains(&y_rounded) {
                 indices.push(y_rounded);
             }
