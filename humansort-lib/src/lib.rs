@@ -3,7 +3,7 @@ use std::{collections::HashSet, error::Error, fmt::Display};
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct HumansortState {
     items: Vec<HumansortItem>,
     #[serde(skip, default = "default_num_items")]
@@ -21,6 +21,13 @@ fn default_current_idx() -> usize {
 }
 
 impl HumansortState {
+    pub fn new() -> Self {
+        HumansortState {
+            items: Vec::new(),
+            num_items: 5,
+            current_idx: 0,
+        }
+    }
     pub fn next(&self) -> Vec<String> {
         // Select the desired number of items with a preference for higher-rated
         // items. (This avoids prompting the user for more information on items
@@ -170,7 +177,7 @@ impl Iterator for HumansortState {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct HumansortItem {
     value: String,
     rating: f32,

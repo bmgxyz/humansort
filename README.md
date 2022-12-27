@@ -15,6 +15,14 @@ The winners float to the top.
 
 [elo]: https://en.wikipedia.org/wiki/Elo_rating_system
 
+## Prerequisites
+
+- Install [Rust](https://rustup.rs/)
+- For the web interface only:
+  - `rustup target add wasm32-unknown-unknown`
+  - `cargo install --locked trunk`
+  - See more detailed docs [here](https://yew.rs/docs/getting-started/introduction)
+
 ## CLI
 
 1. Create a file with items to sort, one on each line.
@@ -33,4 +41,6 @@ The winners float to the top.
 
 ## Web
 
-TODO
+1. `cd humansort/humansort-web/`
+2. `trunk build --release`
+3. Serve the contents of `humansort/humansort-web/dist/` from a Web server.
