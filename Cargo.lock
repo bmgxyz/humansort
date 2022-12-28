@@ -465,6 +465,7 @@ name = "humansort-web"
 version = "0.1.0"
 dependencies = [
  "humansort-lib",
+ "web-sys",
  "yew",
 ]
 

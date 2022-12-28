@@ -127,6 +127,15 @@ impl HumansortState {
     pub fn num_items(&self) -> usize {
         self.num_items
     }
+    pub fn get_all_items(&self) -> Vec<HumansortItem> {
+        self.items.clone()
+    }
+    pub fn push_item(&mut self, new_item: String) {
+        self.items.push(HumansortItem {
+            value: new_item,
+            ..Default::default()
+        })
+    }
     fn find_item_idx_by_value(&self, needle: &String) -> Result<usize, Box<dyn Error>> {
         let maybe_item = self
             .items
@@ -186,5 +195,14 @@ pub struct HumansortItem {
 impl Display for HumansortItem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
+    }
+}
+
+impl Default for HumansortItem {
+    fn default() -> Self {
+        HumansortItem {
+            value: String::new(),
+            rating: 0.,
+        }
     }
 }
