@@ -32,7 +32,7 @@ impl Reducible for AppState {
         match action {
             Action::AddItem { name } => {
                 let mut humansort_state = self.humansort_state.clone();
-                humansort_state.push_item(name);
+                humansort_state.add_item(name);
                 AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
@@ -41,7 +41,17 @@ impl Reducible for AppState {
             }
             Action::RenameItem { old_name, new_name } => todo!(),
             Action::RemoveItem { name } => todo!(),
-            Action::SelectPreference { winner, others } => todo!(),
+            Action::SelectPreference { winner, others } => {
+                let mut preferences = others;
+                preferences.insert(0, winner);
+                let mut humansort_state = self.humansort_state.clone();
+                humansort_state.update(&preferences).unwrap();
+                AppState {
+                    current_view: self.current_view.clone(),
+                    humansort_state,
+                }
+                .into()
+            }
             Action::ChangeView { new_view } => AppState {
                 current_view: new_view,
                 humansort_state: self.humansort_state.clone(),
@@ -74,6 +84,7 @@ struct ViewProps {
 fn InputView(props: &ViewProps) -> Html {
     let ViewProps { state } = props;
     let change_view_sorting = {
+        // TODO: check that there are enough items before changing the view
         let state = state.clone();
         Callback::from(move |_| {
             state.dispatch(Action::ChangeView {
@@ -111,6 +122,42 @@ fn InputView(props: &ViewProps) -> Html {
     }
 }
 
+#[derive(Properties, PartialEq)]
+struct SortingItemProps {
+    winner: String,
+    others: Vec<String>,
+    items_to_sort_setter: UseStateSetter<Vec<String>>,
+    state: UseReducerHandle<AppState>,
+}
+
+#[function_component]
+fn SortingItem(props: &SortingItemProps) -> Html {
+    let SortingItemProps {
+        winner,
+        others,
+        items_to_sort_setter,
+        state,
+    } = props;
+    let onclick = {
+        let state = state.clone();
+        let winner = winner.clone();
+        let others = others.clone();
+        let items_to_sort_setter = items_to_sort_setter.clone();
+        Callback::from(move |_| {
+            state.dispatch(Action::SelectPreference {
+                winner: winner.to_string(),
+                others: others.to_vec(),
+            });
+            items_to_sort_setter.set(state.humansort_state.next().unwrap());
+        })
+    };
+    html! {
+        <li>
+            <button onclick={onclick}>{ winner }</button>
+        </li>
+    }
+}
+
 #[function_component]
 fn SortingView(props: &ViewProps) -> Html {
     let ViewProps { state } = props;
@@ -130,9 +177,26 @@ fn SortingView(props: &ViewProps) -> Html {
             })
         })
     };
+    let items_to_sort = use_state(|| state.humansort_state.next().unwrap());
     html! {
         <div>
-            <p>{ "I am the Sorting component." }</p>
+            <div>
+                <ol>
+                    { for items_to_sort.iter().enumerate().map(|(idx, item)| {
+                        let mut others = (*items_to_sort).clone();
+                        others.remove(idx);
+                        html! {
+                            <SortingItem
+                                winner={item.to_string()}
+                                {others}
+                                items_to_sort_setter={items_to_sort.setter()}
+                                state={state.clone()}
+                            />
+                        }
+                    }
+                    ) }
+                </ol>
+            </div>
             <button onclick={change_view_input}>{ "Edit items" }</button>
             <button onclick={change_view_output}>{ "View sorted list" }</button>
         </div>
@@ -160,7 +224,15 @@ fn OutputView(props: &ViewProps) -> Html {
     };
     html! {
         <div>
-            <p>{ "I am the Output component." }</p>
+            <div>
+                <ul>
+                    { for state.humansort_state.get_all_items().iter().map(|item|
+                        html! {
+                            <li>{ item.to_string() }</li>
+                        }
+                    ) }
+                </ul>
+            </div>
             <button onclick={change_view_input}>{ "Edit items" }</button>
             <button onclick={change_view_sorting}>{ "Continue sorting" }</button>
         </div>

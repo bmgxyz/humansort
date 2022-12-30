@@ -28,10 +28,11 @@ impl HumansortState {
             current_idx: 0,
         }
     }
-    pub fn next(&self) -> Vec<String> {
+    pub fn next(&self) -> Result<Vec<String>, Box<dyn Error>> {
         // Select the desired number of items with a preference for higher-rated
         // items. (This avoids prompting the user for more information on items
         // that they rated lower already.)
+        // TODO: return error if there aren't enough items
         let mut rng = rand::thread_rng();
         let mut indices = Vec::new();
         while indices.len() < self.num_items {
@@ -50,7 +51,7 @@ impl HumansortState {
         for idx in indices {
             values.push(self.items[idx].value.clone());
         }
-        values
+        Ok(values)
     }
     pub fn update(&mut self, new_data: &[String]) -> Result<(), Box<dyn Error>> {
         // Assume that the first item is the "winner", and all others are the
@@ -130,7 +131,7 @@ impl HumansortState {
     pub fn get_all_items(&self) -> Vec<HumansortItem> {
         self.items.clone()
     }
-    pub fn push_item(&mut self, new_item: String) {
+    pub fn add_item(&mut self, new_item: String) {
         self.items.push(HumansortItem {
             value: new_item,
             ..Default::default()

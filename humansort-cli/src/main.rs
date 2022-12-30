@@ -144,7 +144,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 // TODO
 
                 // Get options and print them.
-                let items = humansort.next();
+                let items = humansort.next()?;
                 for (idx, item) in items.iter().enumerate() {
                     term.write_line(&format!("({}) {}", idx + 1, *item))?;
                 }
