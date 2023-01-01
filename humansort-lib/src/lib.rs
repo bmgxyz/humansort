@@ -131,11 +131,25 @@ impl HumansortState {
     pub fn get_all_items(&self) -> Vec<HumansortItem> {
         self.items.clone()
     }
-    pub fn add_item(&mut self, new_item: String) {
+    pub fn add_item(&mut self, new_item: &String) {
         self.items.push(HumansortItem {
-            value: new_item,
+            value: new_item.to_string(),
             ..Default::default()
         })
+    }
+    pub fn rename_item(
+        &mut self,
+        old_item_name: &String,
+        new_item_name: &String,
+    ) -> Result<(), Box<dyn Error>> {
+        let item_idx = self.find_item_idx_by_value(old_item_name)?;
+        self.items[item_idx].value = new_item_name.to_string();
+        Ok(())
+    }
+    pub fn remove_item(&mut self, item_to_remove: &String) -> Result<(), Box<dyn Error>> {
+        let item_idx = self.find_item_idx_by_value(item_to_remove)?;
+        self.items.remove(item_idx);
+        Ok(())
     }
     fn find_item_idx_by_value(&self, needle: &String) -> Result<usize, Box<dyn Error>> {
         let maybe_item = self

@@ -32,15 +32,31 @@ impl Reducible for AppState {
         match action {
             Action::AddItem { name } => {
                 let mut humansort_state = self.humansort_state.clone();
-                humansort_state.add_item(name);
+                humansort_state.add_item(&name);
                 AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
                 }
                 .into()
             }
-            Action::RenameItem { old_name, new_name } => todo!(),
-            Action::RemoveItem { name } => todo!(),
+            Action::RenameItem { old_name, new_name } => {
+                let mut humansort_state = self.humansort_state.clone();
+                humansort_state.rename_item(&old_name, &new_name).unwrap();
+                AppState {
+                    current_view: self.current_view.clone(),
+                    humansort_state,
+                }
+                .into()
+            }
+            Action::RemoveItem { name } => {
+                let mut humansort_state = self.humansort_state.clone();
+                humansort_state.remove_item(&name).unwrap();
+                AppState {
+                    current_view: self.current_view.clone(),
+                    humansort_state,
+                }
+                .into()
+            }
             Action::SelectPreference { winner, others } => {
                 let mut preferences = others;
                 preferences.insert(0, winner);
@@ -70,8 +86,61 @@ struct InputItemProps {
 #[function_component]
 fn InputItem(props: &InputItemProps) -> Html {
     let InputItemProps { state, value } = props;
+    let editing = use_state(|| false);
+    let editing_value = use_state(|| value.to_string());
+    let onremove = {
+        let state = state.clone();
+        let value = value.clone();
+        Callback::from(move |_| {
+            state.dispatch(Action::RemoveItem {
+                name: value.to_string(),
+            })
+        })
+    };
+    let onedit = {
+        let editing = editing.clone();
+        Callback::from(move |_| {
+            editing.set(true);
+        })
+    };
+    let onkeypress = {
+        let state = state.clone();
+        let old_value = value.clone();
+        let editing = editing.clone();
+        let editing_value = editing_value.clone();
+        move |e: KeyboardEvent| {
+            let target: HtmlInputElement = e.target_unchecked_into();
+            let new_value = target.value();
+            editing_value.set(new_value.clone());
+            if e.key() == "Enter" {
+                state.dispatch(Action::RenameItem {
+                    old_name: old_value.to_string(),
+                    new_name: new_value,
+                });
+                editing.set(false);
+            }
+        }
+    };
+    // TODO: replace text in buttons with icons
     html! {
-        <li>{ value }</li>
+        <li>
+            {
+                if *editing {
+                    html! {
+                        <input type="text" {onkeypress} value={editing_value.to_string()} />
+                    }
+                }
+                else {
+                    html! {
+                        <>
+                            { value }
+                            <button onclick={onedit}>{ "edit" }</button>
+                        </>
+                    }
+                }
+            }
+            <button onclick={onremove}>{ "remove" }</button>
+        </li>
     }
 }
 
