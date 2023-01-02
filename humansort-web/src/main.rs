@@ -274,6 +274,7 @@ fn SortingView(props: &ViewProps) -> Html {
 
 #[function_component]
 fn OutputView(props: &ViewProps) -> Html {
+    const DEFAULT_NUM_ITEMS: usize = 10;
     let ViewProps { state } = props;
     let change_view_sorting = {
         let state = state.clone();
@@ -291,19 +292,61 @@ fn OutputView(props: &ViewProps) -> Html {
             })
         })
     };
+    let num_items_to_show = use_state(|| {
+        let num_items = state.humansort_state.get_all_items().len();
+        DEFAULT_NUM_ITEMS.min(num_items)
+    });
+    let showing_all = use_state(|| false);
+    let show_all = {
+        let state = state.clone();
+        let num_items_to_show = num_items_to_show.clone();
+        let showing_all = showing_all.clone();
+        Callback::from(move |_| {
+            let num_items = state.humansort_state.get_all_items().len();
+            showing_all.set(true);
+            num_items_to_show.set(num_items);
+        })
+    };
+    let show_fewer = {
+        let state = state.clone();
+        let num_items_to_show = num_items_to_show.clone();
+        let showing_all = showing_all.clone();
+        Callback::from(move |_| {
+            let num_items = state.humansort_state.get_all_items().len();
+            showing_all.set(false);
+            num_items_to_show.set(DEFAULT_NUM_ITEMS.min(num_items));
+        })
+    };
     html! {
         <div>
             <div>
                 <ul>
-                    { for state.humansort_state.get_all_items().iter().map(|item|
+                    { for state.humansort_state
+                        .get_all_items()[..*num_items_to_show].iter().map(|item|
                         html! {
                             <li>{ item.to_string() }</li>
                         }
                     ) }
                 </ul>
             </div>
-            <button onclick={change_view_input}>{ "Edit items" }</button>
-            <button onclick={change_view_sorting}>{ "Continue sorting" }</button>
+            <div>
+                // TODO: only show these buttons if there are enough items
+                { if *showing_all {
+                    // TODO: add an up arrow icon here
+                    html! {
+                        <button onclick={show_fewer}>{ "Show fewer" }</button>
+                    }
+                } else {
+                    // TODO: add a down arrow icon here
+                    html! {
+                        <button onclick={show_all}>{ "Show all" }</button>
+                    }
+                } }
+            </div>
+            <div>
+                <button onclick={change_view_input}>{ "Edit items" }</button>
+                <button onclick={change_view_sorting}>{ "Continue sorting" }</button>
+            </div>
         </div>
     }
 }
