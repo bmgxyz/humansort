@@ -6,44 +6,50 @@
     <title>Humansort</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        /* Add some basic styling to the body */
         body {
             font-family: Arial, sans-serif;
+            font-size: large;
             margin: 0;
             padding: 0;
         }
 
-        /* Style the text input field */
         input[type="text"] {
-            width: 60%;
+            width: 80%;
             padding: 12px 20px;
             margin: 8px 0;
             box-sizing: border-box;
             border: 2px solid #ccc;
             border-radius: 4px;
+            font-size: large;
         }
 
-        /* Style the buttons */
         button {
-            width: 20%;
             background-color: #4CAF50;
             color: white;
             padding: 14px 20px;
-            margin: 8px 0;
+            margin: 8px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: large;
         }
 
         button:hover {
             background-color: #45a049;
         }
 
-        /* Style the container element that holds the text input and buttons */
         .container {
-            width: 80%;
-            margin: 0 auto;
+            width: unset;
+            margin: unset;
             text-align: center;
+        }
+
+        @media screen and (min-width: 480px) {
+            .container {
+                width: 80%;
+                margin: 0 auto;
+                text-align: center;
+            }
         }
     </style>
 </head>

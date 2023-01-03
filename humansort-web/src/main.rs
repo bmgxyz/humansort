@@ -202,7 +202,11 @@ fn InputView(props: &ViewProps) -> Html {
                     ) }
                 </ul>
             </div>
-            <input type="text" {onkeypress} />
+            <input
+                type="text"
+                placeholder={"Type a new item and press enter to add it"}
+                {onkeypress}
+            />
             <div>
                 <button
                     onclick={change_view_sorting}
