@@ -22,11 +22,7 @@ fn default_current_idx() -> usize {
 
 impl HumansortState {
     pub fn new() -> Self {
-        HumansortState {
-            items: Vec::new(),
-            num_items: 5,
-            current_idx: 0,
-        }
+        HumansortState::default()
     }
     pub fn next(&self) -> Result<Vec<String>, Box<dyn Error>> {
         // Select the desired number of items with a preference for higher-rated
@@ -161,6 +157,16 @@ impl HumansortState {
             Ok(i.0)
         } else {
             Err(format!("Failed to find '{}'", needle).into())
+        }
+    }
+}
+
+impl Default for HumansortState {
+    fn default() -> Self {
+        HumansortState {
+            items: Vec::new(),
+            num_items: 5,
+            current_idx: 0,
         }
     }
 }

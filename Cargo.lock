@@ -464,7 +464,9 @@ dependencies = [
 name = "humansort-web"
 version = "0.1.0"
 dependencies = [
+ "gloo",
  "humansort-lib",
+ "serde",
  "web-sys",
  "yew",
 ]

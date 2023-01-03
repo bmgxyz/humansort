@@ -1,16 +1,18 @@
 use std::rc::Rc;
 
+use gloo::storage::{LocalStorage, Storage};
 use humansort_lib::HumansortState;
+use serde::{Deserialize, Serialize};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize)]
 struct AppState {
     current_view: AppView,
     humansort_state: HumansortState,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 enum AppView {
     Input,
     Sorting,
@@ -25,11 +27,31 @@ enum Action {
     ChangeView { new_view: AppView },
 }
 
+impl AppState {
+    const STORAGE_KEY: &str = "humansort_app_state";
+
+    fn load_or_default() -> AppState {
+        LocalStorage::get(Self::STORAGE_KEY).unwrap_or_default()
+    }
+    fn store(&self) {
+        let _ = LocalStorage::set(Self::STORAGE_KEY, self);
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        AppState {
+            current_view: AppView::Input,
+            humansort_state: HumansortState::default(),
+        }
+    }
+}
+
 impl Reducible for AppState {
     type Action = Action;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        match action {
+        let new_state = match action {
             Action::AddItem { name } => {
                 let mut humansort_state = self.humansort_state.clone();
                 humansort_state.add_item(&name);
@@ -37,7 +59,6 @@ impl Reducible for AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
                 }
-                .into()
             }
             Action::RenameItem { old_name, new_name } => {
                 let mut humansort_state = self.humansort_state.clone();
@@ -46,7 +67,6 @@ impl Reducible for AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
                 }
-                .into()
             }
             Action::RemoveItem { name } => {
                 let mut humansort_state = self.humansort_state.clone();
@@ -55,7 +75,6 @@ impl Reducible for AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
                 }
-                .into()
             }
             Action::SelectPreference { winner, others } => {
                 let mut preferences = others;
@@ -66,14 +85,14 @@ impl Reducible for AppState {
                     current_view: self.current_view.clone(),
                     humansort_state,
                 }
-                .into()
             }
             Action::ChangeView { new_view } => AppState {
                 current_view: new_view,
                 humansort_state: self.humansort_state.clone(),
-            }
-            .into(),
-        }
+            },
+        };
+        new_state.store();
+        new_state.into()
     }
 }
 
@@ -357,10 +376,7 @@ fn OutputView(props: &ViewProps) -> Html {
 
 #[function_component]
 fn App() -> Html {
-    let state = use_reducer(|| AppState {
-        current_view: AppView::Input,
-        humansort_state: HumansortState::new(),
-    });
+    let state = use_reducer(|| AppState::load_or_default());
 
     html! {
         <div class="container">

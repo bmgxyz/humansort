@@ -6,6 +6,8 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
+gloo = "0.8.0"
 humansort-lib = { path = "../humansort-lib" }
+serde = { version = "1.0.151", features = ["derive"] }
 web-sys = { version = "0.3.60", features = ["HtmlInputElement"] }
 yew = { version = "0.20.0", features = ["csr"] }
