@@ -185,7 +185,11 @@ fn InputView(props: &ViewProps) -> Html {
             </div>
             <input type="text" {onkeypress} />
             <div>
-                <button onclick={change_view_sorting}>{ "Start sorting" }</button>
+                <button
+                    onclick={change_view_sorting}
+                    disabled={state.humansort_state.get_all_items().len() < 5}>
+                    { "Start sorting" }
+                </button>
             </div>
         </div>
     }
