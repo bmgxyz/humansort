@@ -28,7 +28,14 @@ impl HumansortState {
         // Select the desired number of items with a preference for higher-rated
         // items. (This avoids prompting the user for more information on items
         // that they rated lower already.)
-        // TODO: return error if there aren't enough items
+        if self.items.len() < self.num_items {
+            return Err(format!(
+                "Not enough items: need {} but found {}",
+                self.num_items,
+                self.items.len()
+            )
+            .into());
+        }
         let mut rng = rand::thread_rng();
         let mut indices = Vec::new();
         while indices.len() < self.num_items {

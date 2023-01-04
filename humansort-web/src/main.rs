@@ -140,26 +140,33 @@ fn InputItem(props: &InputItemProps) -> Html {
             }
         }
     };
-    // TODO: replace text in buttons with icons
     html! {
-        <li>
+        <tr>
             {
                 if *editing {
                     html! {
-                        <input type="text" {onkeypress} value={editing_value.to_string()} />
+                        <td colspan="2">
+                            <input type="text" {onkeypress} value={editing_value.to_string()} />
+                        </td>
                     }
                 }
                 else {
                     html! {
                         <>
-                            { value }
-                            <button onclick={onedit}>{ "edit" }</button>
+                            <td>
+                                { value }
+                            </td>
+                            <td>
+                                <button onclick={onedit}>{ "edit" }</button>
+                            </td>
                         </>
                     }
                 }
             }
-            <button onclick={onremove}>{ "remove" }</button>
-        </li>
+            <td>
+                <button onclick={onremove}>{ "remove" }</button>
+            </td>
+        </tr>
     }
 }
 
@@ -172,7 +179,6 @@ struct ViewProps {
 fn InputView(props: &ViewProps) -> Html {
     let ViewProps { state } = props;
     let change_view_sorting = {
-        // TODO: check that there are enough items before changing the view
         let state = state.clone();
         Callback::from(move |_| {
             state.dispatch(Action::ChangeView {
@@ -193,15 +199,6 @@ fn InputView(props: &ViewProps) -> Html {
     };
     html! {
         <div>
-            <div>
-                <ul>
-                    { for state.humansort_state.get_all_items().iter().map(|item|
-                        html! {
-                            <InputItem state={props.state.clone()} value={item.to_string()} />
-                        }
-                    ) }
-                </ul>
-            </div>
             <input
                 type="text"
                 placeholder={"Type a new item and press enter to add it"}
@@ -211,9 +208,16 @@ fn InputView(props: &ViewProps) -> Html {
                 <button
                     onclick={change_view_sorting}
                     disabled={state.humansort_state.get_all_items().len() < 5}>
-                    { "Start sorting" }
+                    { "Start sorting 🠖" }
                 </button>
             </div>
+            <table class={"viewContent"}>
+                { for state.humansort_state.get_all_items().iter().map(|item|
+                    html! {
+                        <InputItem state={props.state.clone()} value={item.to_string()} />
+                    }
+                ) }
+            </table>
         </div>
     }
 }
@@ -248,9 +252,9 @@ fn SortingItem(props: &SortingItemProps) -> Html {
         })
     };
     html! {
-        <li>
-            <button onclick={onclick}>{ winner }</button>
-        </li>
+        <div>
+            <button class={"sortingItem"} onclick={onclick}>{ winner }</button>
+        </div>
     }
 }
 
@@ -276,25 +280,23 @@ fn SortingView(props: &ViewProps) -> Html {
     let items_to_sort = use_state(|| state.humansort_state.next().unwrap());
     html! {
         <div>
-            <div>
-                <ol>
-                    { for items_to_sort.iter().enumerate().map(|(idx, item)| {
-                        let mut others = (*items_to_sort).clone();
-                        others.remove(idx);
-                        html! {
-                            <SortingItem
-                                winner={item.to_string()}
-                                {others}
-                                items_to_sort_setter={items_to_sort.setter()}
-                                state={state.clone()}
-                            />
-                        }
+            <button onclick={change_view_input}>{ "🠔 Edit items" }</button>
+            <button onclick={change_view_output}>{ "View sorted list 🠖" }</button>
+            <div class={"viewContent"}>
+                { for items_to_sort.iter().enumerate().map(|(idx, item)| {
+                    let mut others = (*items_to_sort).clone();
+                    others.remove(idx);
+                    html! {
+                        <SortingItem
+                            winner={item.to_string()}
+                            {others}
+                            items_to_sort_setter={items_to_sort.setter()}
+                            state={state.clone()}
+                        />
                     }
-                    ) }
-                </ol>
+                }
+                ) }
             </div>
-            <button onclick={change_view_input}>{ "Edit items" }</button>
-            <button onclick={change_view_output}>{ "View sorted list" }</button>
         </div>
     }
 }
@@ -346,33 +348,34 @@ fn OutputView(props: &ViewProps) -> Html {
     };
     html! {
         <div>
-            <div>
-                <ul>
+            <button onclick={change_view_input}>{ "🠔 Edit items" }</button>
+            <button onclick={change_view_sorting}>{ "🠔 Continue sorting" }</button>
+            <div class={"viewContent"}>
+                <div>
                     { for state.humansort_state
                         .get_all_items()[..*num_items_to_show].iter().map(|item|
                         html! {
-                            <li>{ item.to_string() }</li>
+                            <div>{ item.to_string() }</div>
                         }
                     ) }
-                </ul>
-            </div>
-            <div>
-                // TODO: only show these buttons if there are enough items
-                { if *showing_all {
-                    // TODO: add an up arrow icon here
-                    html! {
-                        <button onclick={show_fewer}>{ "Show fewer" }</button>
-                    }
-                } else {
-                    // TODO: add a down arrow icon here
-                    html! {
-                        <button onclick={show_all}>{ "Show all" }</button>
-                    }
-                } }
-            </div>
-            <div>
-                <button onclick={change_view_input}>{ "Edit items" }</button>
-                <button onclick={change_view_sorting}>{ "Continue sorting" }</button>
+                </div>
+                    { if state.humansort_state.get_all_items().len() > DEFAULT_NUM_ITEMS {
+                        if *showing_all {
+                            html! {
+                                <div>
+                                    <button onclick={show_fewer}>{ "Show fewer 🠕" }</button>
+                                </div>
+                            }
+                        } else {
+                            html! {
+                                <div>
+                                    <button onclick={show_all}>{ "Show all 🠗" }</button>
+                                </div>
+                            }
+                        }
+                    } else {
+                        html! {}
+                    } }
             </div>
         </div>
     }
