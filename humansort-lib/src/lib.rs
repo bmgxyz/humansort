@@ -40,11 +40,7 @@ impl HumansortState {
         let mut indices = Vec::new();
         while indices.len() < self.num_items {
             let x = rng.gen_range(0_f32..1_f32);
-            let y = if x <= 0.25 {
-                x
-            } else {
-                (x - 0.1).powi(3) + 0.25
-            };
+            let y = x.powi(2);
             let y_rounded = (y * self.items.len() as f32).floor() as usize;
             if !indices.contains(&y_rounded) {
                 indices.push(y_rounded);
